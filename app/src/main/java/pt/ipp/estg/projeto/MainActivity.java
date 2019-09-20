@@ -82,10 +82,11 @@ public class MainActivity extends AppCompatActivity {
     DatabaseReference currentRegistration; //Matricula veiculo
     DatabaseReference registrationTrips; //Viagens com esta matricula
 
+    DatabaseReference Utilizadores;
+    DatabaseReference utilizador;
     DatabaseReference currentUser; //Utilizador
     DatabaseReference userTrips; //Viagens
     DatabaseReference currentTrip;// = database.getReference("Utilizadores").child("Viagens");
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        FirebaseUser user = mAuth.getCurrentUser();
+        final FirebaseUser user = mAuth.getCurrentUser();
         if(user != null){
             Toast.makeText(getApplicationContext(), "Bem-vindo de volta " + user.getEmail(), Toast.LENGTH_SHORT).show();
             database = FirebaseDatabase.getInstance();
@@ -107,7 +108,15 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
+        Utilizadores = database.getReference().getRoot().child("Utilizadores");
+        currentUser = Utilizadores.push();
+        currentUser.push().setValue(user.getEmail());
+
         userTrips = currentUser.child("Viagens");
+
+        registrationTrips = database.getReference().getRoot().child("Veiculos");
+        currentRegistration = registrationTrips.push();
+
 
         email = user.getEmail();
         mEmail = findViewById(R.id.email_utilizador);
@@ -151,18 +160,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button atualizacoesperiodicasButton = findViewById(R.id.obter_atualizações_periódicas);
+        final Button atualizacoesperiodicasButton = findViewById(R.id.obter_atualizações_periódicas);
         atualizacoesperiodicasButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 startLocationUpdates();
 
-                currentTrip = userTrips.push();
+                currentTrip = userTrips.push(); //cria outra viagem
                 currentTrip.child("start").setValue(System.currentTimeMillis());
                 currentTrip.child("locais");
                 //myRef.child("Viagem").child("data_inicio").setValue(getDateTime());
                 dataInicio = getDateTime();
+                atualizacoesperiodicasButton.setEnabled(false);
             }
         });
 
@@ -179,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 //myRef.child("Viagem").child("data_fim").setValue(getDateTime());
                 dataFim = getDateTime();
                 pararatualizacoesperiodicasButton.setEnabled(false);
+                atualizacoesperiodicasButton.setEnabled(true);
             }
         });
 
@@ -206,19 +216,13 @@ public class MainActivity extends AppCompatActivity {
                         Local local = gravarLocal(location.getLatitude(), location.getLongitude(), location.getAccuracy(), location.getSpeed(), location.getAltitude(), address);
 
                         currentTrip.child("locais").push().setValue(local);
-                        currentUser.child("lastLocation").setValue(local);
+                        //currentUser.child("lastLocation").setValue(local);
+                        currentRegistration.child("Última Localização").setValue(local);
+                        currentRegistration.child("Matricula").setValue(matricula);
+                        currentRegistration.child("Condutor").setValue(user.getEmail());
 
                         lista_locais.add(local);
                         pararatualizacoesperiodicasButton.setEnabled(true);
-
-                        //Viagem viagem = gravarViagem(dataInicio, dataFim, lista_locais);
-                        //viagens.add(viagem);
-
-                        //Utilizador utilizador = gravarUtilizador(email, viagens);
-                        //utilizadores.add(utilizador);
-
-                        //currentUser.setValue(viagens);
-
                     }
                 }
             }

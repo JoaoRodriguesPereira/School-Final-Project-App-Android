@@ -18,8 +18,10 @@ import pt.ipp.estg.projeto.R;
 public class PerfilUtilizador extends AppCompatActivity {
 
     private TextView mEmail;
+    private String email;
 
     private EditText mMatrícula;
+    private String matricula;
 
     private FirebaseAuth mAuth;
 
@@ -30,24 +32,29 @@ public class PerfilUtilizador extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        mEmail = findViewById(R.id.email_utilizador);
-        mMatrícula = findViewById(R.id.matricula);
+        FirebaseUser user = mAuth.getCurrentUser();
 
+        email = user.getEmail();
+        mEmail = findViewById(R.id.email_utilizador);
+        mEmail.setText(email);
+
+
+        mMatrícula = findViewById(R.id.matricula);
+        matricula = mMatrícula.getText().toString();
 
         Button iniciarViagem = findViewById(R.id.iniciarViagem);
+
         iniciarViagem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                IniciarViagem(view);
+                if (matricula.matches("[0-9]{2}-[a-zA-z]{2}-[0-9]{2}")){
+                    IniciarViagem(view);
+                } else {
+
+                    mMatrícula.setError("Required.");
+                }
             }
         });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        mEmail.setText(getString(R.string.emailpassword_status_fmt, currentUser.getEmail(), currentUser.isEmailVerified()));
     }
 
     public void IniciarViagem(View v) {
