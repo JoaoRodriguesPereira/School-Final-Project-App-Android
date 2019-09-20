@@ -20,7 +20,7 @@ public class PerfilUtilizador extends AppCompatActivity {
     private TextView mEmail;
     private String email;
 
-    private EditText mMatrícula;
+    private EditText mMatricula;
     private String matricula;
 
     private FirebaseAuth mAuth;
@@ -39,8 +39,8 @@ public class PerfilUtilizador extends AppCompatActivity {
         mEmail.setText(email);
 
 
-        mMatrícula = findViewById(R.id.matricula);
-        matricula = mMatrícula.getText().toString();
+        mMatricula = findViewById(R.id.matricula);
+        matricula = mMatricula.getText().toString();
 
         Button iniciarViagem = findViewById(R.id.iniciarViagem);
 
@@ -51,7 +51,7 @@ public class PerfilUtilizador extends AppCompatActivity {
                     IniciarViagem(view);
                 } else {
 
-                    mMatrícula.setError("Required.");
+                    mMatricula.setError("Required.");
                 }
             }
         });
@@ -59,7 +59,7 @@ public class PerfilUtilizador extends AppCompatActivity {
 
     public void IniciarViagem(View v) {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("matricula", mMatrícula.getText().toString());
+        intent.putExtra("matricula", mMatricula.getText().toString());
         startActivity(intent);
     }
 }
