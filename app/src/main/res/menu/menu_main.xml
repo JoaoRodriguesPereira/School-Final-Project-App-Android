@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/addEncomenda"
+        android:title="@string/add_encomenda"
+        android:icon="@drawable/ic_add_circle_outline_black_24dp"
+        app:showAsAction="always"></item>
+
+    <item
+        android:id="@+id/iniciarViagem"
+        android:title="@string/iniciar_viagem"
+        android:icon="@drawable/ic_navigation_black_24dp"
+        app:showAsAction="always"></item>
+
+    <item
+        android:id="@+id/entregarEncomenda"
+        android:title="@string/entregarEncomenda"
+        android:icon="@drawable/ic_pin_drop_black_24dp"
+        android:visible="false"
+        app:showAsAction="always"></item>
+
+    <item
+        android:id="@+id/logout"
+        android:title="@string/sign_out"
+        app:showAsAction="never"></item>
+
+</menu>
