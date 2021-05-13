@@ -8,17 +8,19 @@ public class Local {
     private double velocidade;
     private double altitude;
     private String morada;
+    private long data;
 
     public Local() {
     }
 
-    public Local(double latitude, double longitude, double precisao, double velocidade, double altitude, String morada) {
+    public Local(double latitude, double longitude, double precisao, double velocidade, double altitude, String morada, long data) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.precisao = precisao;
         this.velocidade = velocidade;
         this.altitude = altitude;
         this.morada = morada;
+        this.data = data;
     }
 
     public double getLatitude() {
@@ -67,5 +69,13 @@ public class Local {
 
     public void setMorada(String morada) {
         this.morada = morada;
+    }
+
+    public long getData() {
+        return data;
+    }
+
+    public void setData(long data) {
+        this.data = data;
     }
 }

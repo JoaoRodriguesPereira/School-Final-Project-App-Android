@@ -1,313 +1,194 @@
 package pt.ipp.estg.projeto;
 
-import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 
 import pt.ipp.estg.projeto.login.Login;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PassarDados {
 
-    private static final int REQUEST_FINE_LOCATION = 100;
-
-    private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest mLocationRequest;
-    private LocationCallback mLocationCallback;
-
+    private RegistoEncomenda fragmentRegisto;
     private FirebaseAuth mAuth;
-
-    private TextView mEmail;
-
-    private String email;
-
-    private TextView mMatricula;
-
-    private String matricula;
-
-    private TextView mLatitudeTextView;
-    private TextView mLongitudeTextView;
-    private TextView mPrecisaoTextView;
-    private TextView mVelocidadeTextView;
-    private TextView mAltitudeTextView;
-
-    private TextView mLatitudeatualizadaTextView;
-    private TextView mLongitudeatualizadaTextView;
-    private TextView mPrecisaoatualizadaTextView;
-    private TextView mHoraatualizadaTextView;
-    private TextView mVelocidadeatualizadaTextView;
-    private TextView mAltitudeatualizadaTextView;
-
-    private TextView mMoradaAtualizadaTextView;
-
-    private String dataInicio;
-    private String dataFim;
-
-    private List<Viagem> viagens;
-    private List<Utilizador> utilizadores;
-
-    FirebaseDatabase database;// = FirebaseDatabase.getInstance();
-
-    DatabaseReference currentRegistration; //Matricula veiculo
-    DatabaseReference registrationTrips; //Viagens com esta matricula
-
-    DatabaseReference Utilizadores;
-    DatabaseReference utilizador;
-    DatabaseReference currentUser; //Utilizador
-    DatabaseReference userTrips; //Viagens
-    DatabaseReference currentTrip;// = database.getReference("Utilizadores").child("Viagens");
+    private String mMatricula;
+    private String mMorada;
+    private Boolean mEmViagem;
+    private double mLatitude;
+    private double mLongitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        matricula = getIntent().getStringExtra("matricula");
-
         mAuth = FirebaseAuth.getInstance();
 
         final FirebaseUser user = mAuth.getCurrentUser();
-        if(user != null){
+        if (user != null) {
             Toast.makeText(getApplicationContext(), "Bem-vindo de volta " + user.getEmail(), Toast.LENGTH_SHORT).show();
-            database = FirebaseDatabase.getInstance();
-            currentUser = database.getReference(user.getEmail().replace(".","-"));
+
+            Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+            setSupportActionBar(myToolbar);
+
+            //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            SharedPreferences.Editor editor = getSharedPreferences("pref", Context.MODE_PRIVATE).edit();
+            editor.putString("pref", mMatricula).apply();
+
+            if (findViewById(R.id.fragment_container) != null) {
+                if (savedInstanceState != null)
+                    return;
+
+                PaginaInicial fragmentPaginaInicial = new PaginaInicial();
+
+                getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, fragmentPaginaInicial).commit();
+            }
+
         } else {
             Intent intent = new Intent(this, Login.class);
             startActivity(intent);
             finish();
         }
-
-        Utilizadores = database.getReference().getRoot().child("Utilizadores");
-        currentUser = Utilizadores.push();
-        currentUser.push().setValue(user.getEmail());
-
-        userTrips = currentUser.child("Viagens");
-
-        registrationTrips = database.getReference().getRoot().child("Veiculos");
-        currentRegistration = registrationTrips.push();
-
-
-        email = user.getEmail();
-        mEmail = findViewById(R.id.email_utilizador);
-        mEmail.setText(email);
-
-        mMatricula = findViewById(R.id.text_matricula);
-        mMatricula.setText(matricula);
-
-        mLatitudeTextView = findViewById(R.id.latitude);
-        mLongitudeTextView = findViewById(R.id.longitude);
-        mPrecisaoTextView = findViewById(R.id.precisao);
-        mVelocidadeTextView = findViewById(R.id.velocidade);
-        mAltitudeTextView = findViewById(R.id.altitude);
-
-        mLatitudeatualizadaTextView = findViewById(R.id.latitudeatualizada);
-        mLongitudeatualizadaTextView = findViewById(R.id.longitudeatualizada);
-        mPrecisaoatualizadaTextView = findViewById(R.id.precisaoatualizada);
-        mVelocidadeatualizadaTextView = findViewById(R.id.velocidadeatualizada);
-        mAltitudeatualizadaTextView = findViewById(R.id.altitudeatualizada);
-        mHoraatualizadaTextView = findViewById(R.id.horaatualizada);
-
-        Button signOut = findViewById(R.id.signOutButton);
-        signOut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signOut();
-            }
-        });
-
-        mMoradaAtualizadaTextView = findViewById(R.id.moradaatualizada);
-
-        final List<Local> lista_locais = new ArrayList<Local>();
-        viagens = new ArrayList<>();
-        utilizadores = new ArrayList<>();
-
-        Button lastLocationButton = findViewById(R.id.obter_ultima_localizacao);
-        lastLocationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getLastLocation();
-            }
-        });
-
-        final Button atualizacoesperiodicasButton = findViewById(R.id.obter_atualizações_periódicas);
-        atualizacoesperiodicasButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startLocationUpdates();
-
-                currentTrip = userTrips.push(); //cria outra viagem
-                currentTrip.child("start").setValue(System.currentTimeMillis());
-                currentTrip.child("locais");
-                //myRef.child("Viagem").child("data_inicio").setValue(getDateTime());
-                dataInicio = getDateTime();
-                atualizacoesperiodicasButton.setEnabled(false);
-            }
-        });
-
-        final Button pararatualizacoesperiodicasButton = findViewById(R.id.parar_atualiazacoes_periódicas);
-        pararatualizacoesperiodicasButton.setEnabled(false);
-        pararatualizacoesperiodicasButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                stopLocationUpdates();
-
-                currentTrip.child("end").setValue(System.currentTimeMillis());
-                currentTrip = null;
-
-                //myRef.child("Viagem").child("data_fim").setValue(getDateTime());
-                dataFim = getDateTime();
-                pararatualizacoesperiodicasButton.setEnabled(false);
-                atualizacoesperiodicasButton.setEnabled(true);
-            }
-        });
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(5000);
-        mLocationRequest.setFastestInterval(5000);
-
-        mLocationCallback = new LocationCallback() {
-            public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()) {
-                    if (location == null) {
-                        Toast.makeText(MainActivity.this, "Não possui localização", Toast.LENGTH_LONG).show();
-                    } else {
-                        mLatitudeatualizadaTextView.setText(String.format("Latitude: %s", location.getLatitude()));
-                        mLongitudeatualizadaTextView.setText(String.format("Longitude: %s", location.getLongitude()));
-                        mPrecisaoatualizadaTextView.setText(String.format("Precisão: %s", location.getAccuracy()));
-                        mVelocidadeatualizadaTextView.setText(String.format("Velocidade: %s", location.getSpeed()));
-                        mAltitudeatualizadaTextView.setText(String.format("Altitude: %s", location.getAltitude()));
-                        mHoraatualizadaTextView.setText(String.format("Data/Hora: %s", getDateTime()));
-
-                        String address = getAddress(location.getLatitude(), location.getLongitude());
-                        mMoradaAtualizadaTextView.setText(String.format("%s", address));
-                        Local local = gravarLocal(location.getLatitude(), location.getLongitude(), location.getAccuracy(), location.getSpeed(), location.getAltitude(), address);
-
-                        currentTrip.child("locais").push().setValue(local);
-                        //currentUser.child("lastLocation").setValue(local);
-                        currentRegistration.child("Última Localização").setValue(local);
-                        currentRegistration.child("Matricula").setValue(matricula);
-                        currentRegistration.child("Condutor").setValue(user.getEmail());
-
-                        lista_locais.add(local);
-                        pararatualizacoesperiodicasButton.setEnabled(true);
-                    }
-                }
-            }
-        };
     }
 
-    private Utilizador gravarUtilizador(String email, List<Viagem> viagens) {
-        Utilizador utilizador = new Utilizador(email, viagens);
-        return utilizador;
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
 
-    private Viagem gravarViagem(String data_inicio, String data_fim, List<Local> locais) {
-        Viagem viagem = new Viagem(data_inicio, data_fim, locais);
-        return viagem;
-    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.addEncomenda:
+                // User chose the "Settings" item, show the app settings UI...
+                irparaRegistoEncomenda();
+                return true;
 
-    private Local gravarLocal(double lat, double lng, double precisao, double vel, double alt, String morada) {
-        Local local = new Local(lat, lng, precisao, vel, alt, morada);
-        return local;
-    }
-
-    private String getDateTime() {
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        Date date = new Date();
-        return dateFormat.format(date);
-    }
-
-    private String getAddress(double mLatitudeatualizadaTextView, double mLongitudeatualizadaTextView) {
-        String morada = "";
-        Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
-        try {
-            List<Address> addresses = geocoder.getFromLocation(mLatitudeatualizadaTextView, mLongitudeatualizadaTextView, 1);
-            morada = addresses.get(0).getAddressLine(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return morada;
-    }
-
-    private void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions();
-            return;
-        }
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-    }
-
-    private void stopLocationUpdates() {
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-    }
-
-    private void getLastLocation() {
-        //Verificar permissões do utilizador
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions();
-            return;
-        }
-        mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-            public void onSuccess(Location location) {
-                if (location != null) {
-                    mLatitudeTextView.setText(String.format("Latitude: %s", location.getLatitude()));
-                    mLongitudeTextView.setText(String.format("Longitude: %s", location.getLongitude()));
-                    mPrecisaoTextView.setText(String.format("Precisão: %s", location.getAccuracy()));
-                    mVelocidadeTextView.setText(String.format("Velocidade: %s", location.getSpeed()));
-                    mAltitudeTextView.setText(String.format("Altitude: %s", location.getAltitude()));
+            case R.id.iniciarViagem:
+                if (mMatricula != null) {
+                    irparaIniciarViagem();
                 } else {
-                    Toast.makeText(MainActivity.this, "Não possui ultima localização", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Tem que adicionar uma encomenda!", Toast.LENGTH_SHORT).show();
                 }
-            }
-        }).addOnFailureListener(this, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(MainActivity.this, "Nao foi possivel obter localização", Toast.LENGTH_LONG).show();
-            }
-        });
+                return true;
+
+            case R.id.entregarEncomenda:
+                irparaEntregarEncomenda();
+                return true;
+
+            case R.id.logout:
+                // User chose the "Favorite" action, mark the current item
+                // as a favorite...
+                signOut();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+        }
     }
 
-    private void requestPermissions() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_FINE_LOCATION);
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
     private void signOut() {
+        mAuth.signOut();
         AuthUI.getInstance().signOut(this);
         Intent intent = new Intent(this, Login.class);
         startActivity(intent);
-        finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mAuth = FirebaseAuth.getInstance();
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+
+        SharedPreferences pref = getSharedPreferences("pref", Context.MODE_PRIVATE);
+        mMatricula = pref.getString("pref", mMatricula);
+
+        if (currentUser == null) {
+            Intent intent = new Intent(this, Login.class);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    private void irparaRegistoEncomenda() {
+
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+
+        ft.addToBackStack(null);
+
+        this.fragmentRegisto = new RegistoEncomenda();
+        fragmentRegisto.setMatricula(mMatricula);
+        fragmentRegisto.show(ft, "dialog");
+    }
+
+    private void irparaEntregarEncomenda() {
+        EntregarEncomenda entregarEncomenda = new EntregarEncomenda();
+        entregarEncomenda.setMatricula(mMatricula);
+        entregarEncomenda.setEmViagem(mEmViagem);
+        entregarEncomenda.setMorada(mMorada);
+        entregarEncomenda.setLatitude(mLatitude);
+        entregarEncomenda.setLongitude(mLongitude);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.addToBackStack(null);
+        ft.replace(R.id.fragment_container, entregarEncomenda);
+        ft.commit();
+    }
+
+    private void irparaIniciarViagem() {
+        IniciarViagem iniciar = new IniciarViagem();
+        iniciar.setMatricula(mMatricula);
+        iniciar.setEmViagem(mEmViagem);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.addToBackStack(null);
+        ft.replace(R.id.fragment_container, iniciar);
+        ft.commit();
+    }
+
+    @Override
+    public void onSetViagem(Boolean emViagem) {
+        mEmViagem = emViagem;
+    }
+
+    @Override
+    public void onSetMorada(String morada) {
+        mMorada = morada;
+    }
+
+    @Override
+    public void onSetMatricula(String matricula) {
+        mMatricula = matricula;
+    }
+
+    @Override
+    public void onSetLatLng(double latitude, double longitude) {
+        mLatitude = latitude;
+        mLongitude = longitude;
     }
 }

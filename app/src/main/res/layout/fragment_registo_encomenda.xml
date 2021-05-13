@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    tools:context=".RegistoEncomenda">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/qual_carro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/qual_carro" />
+
+        <TextView
+            android:id="@+id/matriculaComValor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20dp"/>
+
+        <EditText
+            android:id="@+id/matricula"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/matricula"
+            android:inputType="text"/>
+
+        <TextView
+            android:id="@+id/codigoEncomenda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/codigo"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:id="@+id/codigo_encomenda_textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20dp"/>
+
+        <TextView
+            android:id="@+id/encomenda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/encomenda"
+            android:layout_marginTop="20dp"/>
+
+        <EditText
+            android:id="@+id/descricao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/descricao"
+            android:inputType="text"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/iniciarViagem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/gravarDados" />
+
+</LinearLayout>
